@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { registerCampaignJob } = require('../utils/tasks/campaignTask');
+const { registerCampaignJob,sendCampaignEmails } = require('../utils/tasks/campaignTask');
 const { Campaign } = require('../models/campaign.model');
 
 
@@ -9,6 +9,7 @@ router.get('/:id', async (req, res) => {
     try{
     if (req.params.id) {
       const campaign = await Campaign.findOne({ _id: req.params.id });
+      await sendCampaignEmails(campaign);
       res.status(200).send(campaign);
     }
     else {
@@ -44,7 +45,8 @@ router.post('/', async (req, res) => {
       || !req.body.customers
       || !req.body.customName
       || !req.body.subject
-      || !req.body.body) {
+      || !req.body.body
+      || !req.body.html) {
         return res.status(400).send({ message: 'Bad Request' });
     } else {
       const campaignData = new Campaign(req.body);

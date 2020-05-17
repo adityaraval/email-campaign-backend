@@ -26,4 +26,12 @@ const source = `<!doctype html>
 
 const templateSource = handlebars.compile(source);
 
-module.exports = templateSource;
+// takes html template as an argument and returns compiled html using handlebars
+const getCompiledTemplate = (template) => {
+  return handlebars.compile(template);
+}
+
+module.exports = {
+  templateSource,
+  getCompiledTemplate
+};

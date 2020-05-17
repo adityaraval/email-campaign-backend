@@ -2,8 +2,9 @@ const { agenda } = require('./index');
 const moment = require('moment');
 const _ = require('lodash');
 const { Campaign } = require('../../models/campaign.model')
-const { send } = require('../email/index');
-const templateSource = require('../email/template');
+const { send } = require('../email/sendgrid');
+const { getCompiledTemplate } = require('../email/template');
+
 
 //every time new campaign is created this function is called, and campaignJob is registered
 const registerCampaignJob = async (options) => {
@@ -16,7 +17,8 @@ const registerCampaignJob = async (options) => {
     .save();
 };
 
-//send email function
+//this function will send email to all the subscribers
+// with personalized subject with sendgrid
 const sendCampaignEmails = async (campaign) => {
   try {
     const templateData = {
@@ -24,17 +26,32 @@ const sendCampaignEmails = async (campaign) => {
       body: campaign.body,
       customName:campaign.customName,
     }
-    const html = templateSource(templateData);//it puts data into compiled html
+    //compile an html from campaign object, template is loaded from database
+    const templateSource = getCompiledTemplate(campaign.html);
 
-    //filtering of unsubscribers
-    const customersList = _.filter(campaign.customers, c => {
-      return !campaign.unsubscribers.includes(c);
-    })
-    if (customersList.length) {
-      await send(_.join(customersList, ','), campaign.subject, html);
-    } else {
-      console.log("No customers");
+    //sendgrid mail object
+    const mailObject = {
+      personalizations: [],
+      from: process.env.EMAIL_FROM,
+      text: campaign.body,
+      html: templateSource(templateData),
     }
+
+    //returns personalized list
+    //it filters subscribed customers only
+    mailObject.personalizations = _.filter(campaign.customers,
+      c => c.status === "SUBSCRIBED").map(result => {
+        return {
+          to: result.email,
+          subject: result.subject || campaign.subject
+        };
+      });
+
+    //send personalized emails
+    mailObject.personalizations.length ?
+      await send(mailObject) :
+      console.log(`No subscribers for this campaign ${campaign._id}`);
+
   } catch (e) {
     console.error(e);
   }

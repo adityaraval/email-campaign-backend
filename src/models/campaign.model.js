@@ -1,5 +1,28 @@
 const mongoose = require('mongoose');
-const { CAMPAIGN_STATUS } = require('../constants');
+const { CAMPAIGN_STATUS,
+  CUSTOMER_STATUS,
+} = require('../constants');
+
+//customers sub schema
+const customersSchema = {
+  email: {
+    type: String,
+    required:true
+  },
+  name: {
+    type: String,
+    required:true,
+  },
+  subject: {
+    type: String,
+    //will be used as a personalized subject
+  },
+  status: {
+    type: String,
+    enum: CUSTOMER_STATUS,
+    default:CUSTOMER_STATUS[0]
+  }
+}
 
 const CampaignSchema = new mongoose.Schema({
   name: {
@@ -10,11 +33,8 @@ const CampaignSchema = new mongoose.Schema({
     type: String,
   },
   customers: {
-    type: [String],
+    type: [customersSchema],
     required:true
-  },
-  unsubscribers: {
-    type:[String]
   },
   customName: {
     type: String,
@@ -41,6 +61,10 @@ const CampaignSchema = new mongoose.Schema({
     type: String,
     required:true,
   },
+  html: {
+    type: String,
+    required:true,
+  }
 },{
     timestamps: true,
 });
