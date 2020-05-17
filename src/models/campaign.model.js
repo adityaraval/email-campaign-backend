@@ -20,7 +20,8 @@ const customersSchema = {
   status: {
     type: String,
     enum: CUSTOMER_STATUS,
-    default:CUSTOMER_STATUS[0]
+    default: CUSTOMER_STATUS[0],
+    required:true,
   }
 }
 
